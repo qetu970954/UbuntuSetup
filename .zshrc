@@ -82,6 +82,8 @@ plugins=(
   tmux
   docker
   extract
+  command-not-found
+  you-should-use
   zsh-autosuggestions
   zsh-syntax-highlighting
 )
@@ -126,6 +128,7 @@ alias rm='rm -iv'
 alias cp='cp -iv'
 alias mv='mv -iv'
 alias micro="TERM=xterm-256color micro"
+alias aria2="aria2c -x 4 -s 4 --retry-wait=1"
 
 # Do not overwrite files on redirection
 set -o noclobber
