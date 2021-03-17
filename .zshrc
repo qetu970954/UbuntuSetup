@@ -82,8 +82,9 @@ plugins=(
   tmux
   docker
   extract
-  command-not-found
   you-should-use
+  command-not-found
+  colored-man-pages
   zsh-autosuggestions
   zsh-syntax-highlighting
 )
