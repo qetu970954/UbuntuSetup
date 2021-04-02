@@ -124,7 +124,7 @@ source $ZSH/oh-my-zsh.sh
 PAGER="most"
 
 # Add alias
-alias ls='ls -A --color=tty'
+alias ls='ls --color=tty'
 alias rm='rm -iv'
 alias cp='cp -iv'
 alias mv='mv -iv'
