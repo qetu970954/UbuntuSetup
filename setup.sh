@@ -28,7 +28,8 @@ step "Get micro"
 curl https://getmic.ro | bash
 sudo mv micro /usr/bin/
 
-
+step "Get GDB dashboard"
+wget -P ~ https://git.io/.gdbinit
 
 step "Get theme"
 git clone https://github.com/dracula/gnome-terminal
