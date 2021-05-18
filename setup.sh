@@ -14,12 +14,12 @@ git config --global credential.helper 'cache --timeout=3600000'
 step "Get useful commands"
 sudo add-apt-repository -y ppa:peek-developers/stable
 sudo apt update
-sudo apt install -y git build-essential zsh fzf bat ncdu curl wget tmux  peek \
+sudo apt install -y git build-essential zsh fzf bat ncdu curl wget tmux ripgrep peek \
                     htop tree dos2unix openssh-server gnome-tweaks \
                     grub-customizer clang most fonts-roboto fonts-roboto-slab \
                     ibus-chewing aria2 dconf-cli libreoffice \
                     python3-dev python3-pip python3-setuptools pipenv \
-                    gnome-shell-extension-autohidetopbar
+                    gnome-shell-extension-autohidetopbar 
 
 step "Get jb font"
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/install_manual.sh)"
