@@ -5,12 +5,6 @@ function step(){
   echo "$(tput setaf 6)$1$(tput sgr0)"
 }
 
-step "Configuring git"
-git config --global user.name "Tzu-Yee"
-git config --global user.email "fdja1974.cs07g@nctu.edu.tw"
-git config --global core.editor "micro"
-git config --global credential.helper 'cache --timeout=3600000'
-
 step "Get useful commands"
 sudo add-apt-repository -y ppa:peek-developers/stable
 sudo apt update
@@ -24,9 +18,13 @@ sudo apt install -y git build-essential zsh fzf bat ncdu curl wget tmux ripgrep 
 step "Get jb font"
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/install_manual.sh)"
 
+step "Get delta"
+aria2c https://github.com/dandavison/delta/releases/download/0.8.0/git-delta_0.8.0_amd64.deb -o delta.deb
+sudo dpkg -i delta.deb && rm delta.deb
+
 step "Get micro"
 curl https://getmic.ro | bash
-sudo mv micro /usr/bin/
+mv micro ${HOME}/.local/bin/
 
 step "Get GDB dashboard"
 wget -P ~ https://git.io/.gdbinit
