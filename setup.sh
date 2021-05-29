@@ -5,6 +5,8 @@ function step(){
   echo "$(tput setaf 6)$1$(tput sgr0)"
 }
 
+
+
 step "Get useful commands"
 sudo add-apt-repository -y ppa:peek-developers/stable
 sudo apt update
@@ -14,6 +16,10 @@ sudo apt install -y git build-essential zsh fzf bat ncdu curl wget tmux ripgrep 
                     ibus-chewing aria2 dconf-cli libreoffice \
                     python3-dev python3-pip python3-setuptools pipenv \
                     gnome-shell-extension-autohidetopbar fd-find
+                    
+# Symbolic link bat
+mkdir -p ~/.local/bin
+ln -s /usr/bin/batcat ~/.local/bin/bat
 
 step "Get jb font"
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/install_manual.sh)"
