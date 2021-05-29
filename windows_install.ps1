@@ -8,7 +8,7 @@ scoop install sudo
 
 sudo scoop install 7zip git openssh --global
 
-scoop install aria2 curl grep sed less netcat micro touch bat fzf ripgrep fd zoxide
+scoop install aria2 curl grep sed less netcat micro touch bat fzf ripgrep fd zoxide delta
 
 # Initiate fd
 Invoke-Expression (& {
