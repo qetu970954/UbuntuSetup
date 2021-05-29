@@ -19,7 +19,7 @@ sudo apt install -y git build-essential zsh fzf bat ncdu curl wget tmux ripgrep 
                     grub-customizer clang most fonts-roboto fonts-roboto-slab \
                     ibus-chewing aria2 dconf-cli libreoffice \
                     python3-dev python3-pip python3-setuptools pipenv \
-                    gnome-shell-extension-autohidetopbar 
+                    gnome-shell-extension-autohidetopbar fd-find
 
 step "Get jb font"
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/install_manual.sh)"
