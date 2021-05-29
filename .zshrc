@@ -131,5 +131,8 @@ alias mv='mv -iv'
 alias micro="TERM=xterm-256color micro"
 alias aria2="aria2c -x 4 -s 4 --retry-wait=1"
 
+export FZF_DEFAULT_COMMAND="fd --type file --color=always"
+export FZF_DEFAULT_OPTS="--ansi"
+
 # Do not overwrite files on redirection
 set -o noclobber
