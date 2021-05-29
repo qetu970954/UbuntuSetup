@@ -86,4 +86,4 @@ sudo apt update
 sudo apt autoremove -y
 sudo apt autoclean
 sudo chsh -s /bin/zsh ${USER}
-cp .nanorc .tmux.conf.local .p10k.zsh .zshrc ${HOME}/
+cp .gitconfig .nanorc .tmux.conf.local .p10k.zsh .zshrc ${HOME}/
