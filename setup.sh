@@ -17,9 +17,10 @@ sudo apt install -y git build-essential zsh fzf bat ncdu curl wget tmux peek \
                     python3-dev python3-pip python3-setuptools pipenv \
                     gnome-shell-extension-autohidetopbar fd-find
                     
-# Symbolic link bat
+# Symbolic link bat 
 mkdir -p ~/.local/bin
 ln -s /usr/bin/batcat ~/.local/bin/bat
+ln -s $(which fdfind) ~/.local/bin/fd
 
 step "Get jb font"
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/install_manual.sh)"
