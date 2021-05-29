@@ -12,7 +12,7 @@ sudo add-apt-repository -y ppa:peek-developers/stable
 sudo apt update
 sudo apt install -y git build-essential zsh fzf bat ncdu curl wget tmux peek \
                     htop tree dos2unix openssh-server gnome-tweaks \
-                    grub-customizer clang most fonts-roboto fonts-roboto-slab \
+                    grub-customizer clang fonts-roboto fonts-roboto-slab \
                     ibus-chewing aria2 dconf-cli libreoffice \
                     python3-dev python3-pip python3-setuptools pipenv \
                     gnome-shell-extension-autohidetopbar fd-find
