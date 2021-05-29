@@ -10,7 +10,7 @@ function step(){
 step "Get useful commands"
 sudo add-apt-repository -y ppa:peek-developers/stable
 sudo apt update
-sudo apt install -y git build-essential zsh fzf bat ncdu curl wget tmux ripgrep peek \
+sudo apt install -y git build-essential zsh fzf bat ncdu curl wget tmux peek \
                     htop tree dos2unix openssh-server gnome-tweaks \
                     grub-customizer clang most fonts-roboto fonts-roboto-slab \
                     ibus-chewing aria2 dconf-cli libreoffice \
@@ -27,6 +27,10 @@ step "Get jb font"
 step "Get delta"
 aria2c https://github.com/dandavison/delta/releases/download/0.8.0/git-delta_0.8.0_amd64.deb -o delta.deb
 sudo dpkg -i delta.deb && rm delta.deb
+
+step "Get ripgrep"
+aria2c https://github.com/BurntSushi/ripgrep/releases/download/12.1.1/ripgrep_12.1.1_amd64.deb -o ripgrep.deb
+sudo dpkg -i ripgrep.deb && rm ripgrep.deb
 
 step "Get micro"
 curl https://getmic.ro | bash
