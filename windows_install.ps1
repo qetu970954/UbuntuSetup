@@ -1,6 +1,6 @@
-# $ErrorActionPreference = 'SilentlyContinue'
+Set-ExecutionPolicy RemoteSigned -scope CurrentUser
 
-# iwr -useb get.scoop.sh | iex # Download scoop
+iwr -useb get.scoop.sh | iex # Download scoop
 
 scoop bucket add extras
 
