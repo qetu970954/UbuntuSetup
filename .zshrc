@@ -131,7 +131,7 @@ alias aria2="aria2c -x 4 -s 4 --retry-wait=1"
 # Other environment variables
 export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 export FZF_DEFAULT_COMMAND="fd --type file --color=always"
-export FZF_DEFAULT_OPTS="--ansi"
+export FZF_DEFAULT_OPTS="--ansi -m --bind ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all"
 
 # Do not overwrite files on redirection
 set -o noclobber
