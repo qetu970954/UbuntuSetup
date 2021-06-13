@@ -120,18 +120,19 @@ source $ZSH/oh-my-zsh.sh
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+# Other environment variables
+export BAT_THEME="zenburn"
+export TERM="xterm-256color"
+export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+export FZF_DEFAULT_COMMAND="fd --type file --color=always"
+export FZF_DEFAULT_OPTS="--ansi -m --bind ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all"
+
 # Add alias
 alias ls='ls --color=tty'
 alias rm='rm -iv'
 alias cp='cp -iv'
 alias mv='mv -iv'
-alias micro="TERM=xterm-256color micro"
-alias aria2="aria2c -x 4 -s 4 --retry-wait=1"
-
-# Other environment variables
-export MANPAGER="sh -c 'col -bx | bat -l man -p'"
-export FZF_DEFAULT_COMMAND="fd --type file --color=always"
-export FZF_DEFAULT_OPTS="--ansi -m --bind ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all"
+alias aria2c="aria2c -x 4 -s 4 --retry-wait=1"
 
 # Do not overwrite files on redirection
 set -o noclobber
