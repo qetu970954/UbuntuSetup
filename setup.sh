@@ -39,7 +39,8 @@ step "[5. Get GDB dashboard]"
 wget -P ~ https://git.io/.gdbinit
 
 step "[6. Get tldr]"
-# python already installed , so use pip3 to install it.
+# Use pip3 to get tldr, note that pip3 should be 'sudo apt install' first
+# This tldr is more up-to-date comparing to 'sudo apt install tldr'
 pip3 install tldr
 
 
