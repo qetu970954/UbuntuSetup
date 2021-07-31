@@ -4,14 +4,15 @@ iwr -useb get.scoop.sh | iex # Download scoop
 
 scoop bucket add extras
 
+scoop bucket add nerd-fonts
+
 scoop install sudo
 
-sudo scoop install 7zip git openssh --global
+sudo scoop install 7zip git openssh jetbrains-mono --global
 
-scoop install aria2 curl grep sed less netcat micro touch bat fzf ripgrep fd zoxide delta nu
+scoop install aria2 curl grep sed less netcat micro touch bat fzf ripgrep fd zoxide delta
 
-# nu = nushell, see 'https://github.com/nushell/nushell/'
-# Use this on windows to replace ugly powershell cmds
+
 
 # Initiate zoxide
 Invoke-Expression (& {
