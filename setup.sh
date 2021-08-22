@@ -5,7 +5,7 @@ function step(){
   echo "$(tput setaf 6)$1$(tput sgr0)"
 }
 
-step "[0. Get useful commands]"
+step "[Get useful commands]"
 sudo add-apt-repository -y ppa:peek-developers/stable
 sudo apt update
 sudo apt install -y git build-essential zsh bat ncdu curl wget tmux peek \
@@ -15,33 +15,45 @@ sudo apt install -y git build-essential zsh bat ncdu curl wget tmux peek \
                     python3-dev python3-pip python3-setuptools pipenv \
                     gnome-shell-extension-autohidetopbar fd-find
 
-git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-~/.fzf/install
-
 # Symbolic link bat and fd
 mkdir -p ~/.local/bin
 ln -s /usr/bin/batcat ~/.local/bin/bat
 ln -s $(which fdfind) ~/.local/bin/fd
 
-step "[1. Get jb font]"
+step "[Get jb font]"
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/install_manual.sh)"
 
-step "[2. Get delta]"
+step "[Get delta]"
 aria2c https://github.com/dandavison/delta/releases/download/0.8.0/git-delta_0.8.0_amd64.deb -o delta.deb
 sudo dpkg -i delta.deb && rm delta.deb
 
-step "[3. Get ripgrep]"
+step "[Get ripgrep]"
 aria2c https://github.com/BurntSushi/ripgrep/releases/download/12.1.1/ripgrep_12.1.1_amd64.deb -o ripgrep.deb
 sudo dpkg -i ripgrep.deb && rm ripgrep.deb
 
-step "[4. Get micro]"
+step "[Get micro]"
 curl https://getmic.ro | bash
 mv micro ${HOME}/.local/bin/
 
-step "[5. Get GDB dashboard]"
+step "[Get GDB dashboard]"
 wget -P ~ https://git.io/.gdbinit
 
-step "[6. Get theme]"
+step "[Get oh-my-zsh]"
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" "" --unattended
+git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git ${HOME}/.oh-my-zsh/plugins/zsh-autosuggestions
+git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git ${HOME}/.oh-my-zsh/plugins/zsh-syntax-highlighting
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k
+git clone --depth=1 https://github.com/MichaelAquilina/zsh-you-should-use.git $HOME/.oh-my-zsh/custom/plugins/you-should-use
+
+step "[Get oh-my-tmux]"
+git clone --depth=1 https://github.com/gpakosz/.tmux.git ${HOME}/.tmux
+ln -s -f ${HOME}/.tmux/.tmux.conf ${HOME}
+
+step "[Get fzf]"
+git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+yes | ~/.fzf/install
+
+step "[Get theme]"
 git clone https://github.com/dracula/gnome-terminal
 echo -e -n "1 \n YES \n 1 \n YES" | ./gnome-terminal/install.sh
 aria2c https://github.com/dracula/gtk/archive/master.zip -o dracula_theme.zip
@@ -53,7 +65,7 @@ GEDIT_DIR=${HOME}/.local/share/gedit/styles
 mkdir -p ${GEDIT_DIR}
 aria2c https://raw.githubusercontent.com/dracula/gedit/master/dracula.xml -d ${GEDIT_DIR}
 
-step "[7. Tweak theme and terminal]"
+step "[Tweak theme and terminal]"
 gsettings set org.gnome.desktop.interface gtk-theme "Dracula"
 gsettings set org.gnome.desktop.wm.preferences theme "Dracula"
 gsettings set org.gnome.desktop.interface icon-theme "Dracula"
@@ -78,18 +90,7 @@ dconf write /org/gnome/desktop/input-sources/sources "[('ibus', 'chewing'), ('xk
 dconf write /org/gnome/gedit/preferences/editor/scheme "'dracula'"
 dconf write /org/gnome/desktop/session/idle-delay "uint32 900"
 
-step "[8. Get oh-my-zsh]"
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" "" --unattended
-git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git ${HOME}/.oh-my-zsh/plugins/zsh-autosuggestions
-git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git ${HOME}/.oh-my-zsh/plugins/zsh-syntax-highlighting
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k
-git clone --depth=1 https://github.com/MichaelAquilina/zsh-you-should-use.git $HOME/.oh-my-zsh/custom/plugins/you-should-use
-
-step "[9. Configure tmux]"
-git clone --depth=1 https://github.com/gpakosz/.tmux.git ${HOME}/.tmux
-ln -s -f ${HOME}/.tmux/.tmux.conf ${HOME}
-
-step "[10. clean up]"
+step "[clean up]"
 sudo apt update
 sudo apt autoremove -y
 sudo apt autoclean
