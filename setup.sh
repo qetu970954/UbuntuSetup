@@ -8,13 +8,16 @@ function step(){
 step "[0. Get useful commands]"
 sudo add-apt-repository -y ppa:peek-developers/stable
 sudo apt update
-sudo apt install -y git build-essential zsh fzf bat ncdu curl wget tmux peek \
+sudo apt install -y git build-essential zsh bat ncdu curl wget tmux peek \
                     htop tree dos2unix openssh-server gnome-tweaks \
                     grub-customizer clang fonts-roboto fonts-roboto-slab \
                     ibus-chewing aria2 dconf-cli libreoffice \
                     python3-dev python3-pip python3-setuptools pipenv \
                     gnome-shell-extension-autohidetopbar fd-find
-                    
+
+git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+~/.fzf/install
+
 # Symbolic link bat and fd
 mkdir -p ~/.local/bin
 ln -s /usr/bin/batcat ~/.local/bin/bat
@@ -37,12 +40,6 @@ mv micro ${HOME}/.local/bin/
 
 step "[5. Get GDB dashboard]"
 wget -P ~ https://git.io/.gdbinit
-
-step "[6. Get tldr]"
-# Use pip3 to get tldr, note that pip3 should be 'sudo apt install' first
-# This tldr is more up-to-date comparing to 'sudo apt install tldr'
-pip3 install tldr
-
 
 step "[6. Get theme]"
 git clone https://github.com/dracula/gnome-terminal
