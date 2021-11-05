@@ -12,7 +12,7 @@ sudo scoop install 7zip git openssh jetbrains-mono --global
 
 scoop install aria2 
 scoop install curl grep sed less netcat micro touch bat fzf ripgrep fd zoxide delta uutils-coreutils
-scoop python@3.8.10
+scoop install python@3.8.10
 
 # to make zoxide work on powershell start
 @'
