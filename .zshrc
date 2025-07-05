@@ -121,11 +121,12 @@ source $ZSH/oh-my-zsh.sh
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # Other environment variables
-export BAT_THEME="zenburn"
+export BAT_THEME="dracula"
 export TERM="xterm-256color"
 export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 export FZF_DEFAULT_COMMAND="fd --type file --color=always"
 export FZF_DEFAULT_OPTS="--ansi -m --bind ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all"
+export MICRO_TRUECOLOR=1
 
 # Add alias
 alias ls='ls --color=tty'
@@ -133,6 +134,8 @@ alias rm='rm -iv'
 alias cp='cp -iv'
 alias mv='mv -iv'
 alias aria2c="aria2c -x 4 -s 4 --retry-wait=1"
+
+
 
 # Do not overwrite files on redirection
 set -o noclobber

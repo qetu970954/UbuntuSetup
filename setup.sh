@@ -34,6 +34,11 @@ step "[Get micro]"
 curl https://getmic.ro | bash
 mv micro ${HOME}/.local/bin/
 
+step "[Prepare micro dracula theme]"
+git clone https://github.com/dracula/micro.git micro_dracula
+mkdir -p ~/.config/micro/colorschemes
+cd micro_dracula && mv dracula.micro ~/.config/micro/colorschemes
+
 step "[Get oh-my-zsh]"
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" "" --unattended
 git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git ${HOME}/.oh-my-zsh/plugins/zsh-autosuggestions
@@ -88,4 +93,4 @@ sudo apt update
 sudo apt autoremove -y
 sudo apt autoclean
 sudo chsh -s /bin/zsh ${USER}
-cp .gitconfig .nanorc .p10k.zsh .zshrc ${HOME}/
+cp .gitconfig .p10k.zsh .zshrc ${HOME}/
