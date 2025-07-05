@@ -1,19 +1,18 @@
 #! /usr/bin/bash
-set -euo pipefail
+set -uo pipefail
 
 function step(){
   echo "$(tput setaf 6)$1$(tput sgr0)"
 }
 
 step "[Get useful commands]"
-sudo add-apt-repository -y ppa:peek-developers/stable
 sudo apt update
 sudo apt install -y git build-essential zsh bat ncdu curl wget tmux peek \
                     htop tree dos2unix openssh-server gnome-tweaks \
-                    grub-customizer clang fonts-roboto fonts-roboto-slab \
+                    clang fonts-roboto fonts-roboto-slab \
                     ibus-chewing aria2 dconf-cli libreoffice \
                     python3-dev python3-pip python3-setuptools pipenv \
-                    gnome-shell-extension-autohidetopbar fd-find
+                    fd-find
 
 # Symbolic link bat and fd
 mkdir -p ~/.local/bin
@@ -24,19 +23,16 @@ step "[Get jb font]"
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/install_manual.sh)"
 
 step "[Get delta]"
-aria2c https://github.com/dandavison/delta/releases/download/0.8.0/git-delta_0.8.0_amd64.deb -o delta.deb
+aria2c https://github.com/dandavison/delta/releases/download/0.18.2/git-delta_0.18.2_amd64.deb -o delta.deb
 sudo dpkg -i delta.deb && rm delta.deb
 
 step "[Get ripgrep]"
-aria2c https://github.com/BurntSushi/ripgrep/releases/download/12.1.1/ripgrep_12.1.1_amd64.deb -o ripgrep.deb
+aria2c https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep_14.1.1-1_amd64.deb -o ripgrep.deb
 sudo dpkg -i ripgrep.deb && rm ripgrep.deb
 
 step "[Get micro]"
 curl https://getmic.ro | bash
 mv micro ${HOME}/.local/bin/
-
-step "[Get GDB dashboard]"
-wget -P ~ https://git.io/.gdbinit
 
 step "[Get oh-my-zsh]"
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" "" --unattended
@@ -45,9 +41,6 @@ git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git ${H
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k
 git clone --depth=1 https://github.com/MichaelAquilina/zsh-you-should-use.git $HOME/.oh-my-zsh/custom/plugins/you-should-use
 
-step "[Get oh-my-tmux]"
-git clone --depth=1 https://github.com/gpakosz/.tmux.git ${HOME}/.tmux
-ln -s -f ${HOME}/.tmux/.tmux.conf ${HOME}
 
 step "[Get fzf]"
 git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
@@ -95,4 +88,4 @@ sudo apt update
 sudo apt autoremove -y
 sudo apt autoclean
 sudo chsh -s /bin/zsh ${USER}
-cp .gitconfig .nanorc .tmux.conf.local .p10k.zsh .zshrc ${HOME}/
+cp .gitconfig .nanorc .p10k.zsh .zshrc ${HOME}/
