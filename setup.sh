@@ -12,7 +12,7 @@ sudo apt install -y git build-essential zsh bat ncdu curl wget tmux peek \
                     clang fonts-roboto fonts-roboto-slab \
                     ibus-chewing aria2 dconf-cli libreoffice \
                     python3-dev python3-pip python3-setuptools pipenv \
-                    fd-find
+                    fd-find xclip
 
 # Symbolic link bat and fd
 mkdir -p ~/.local/bin
