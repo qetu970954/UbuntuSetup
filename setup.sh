@@ -1,96 +1,231 @@
-#! /usr/bin/bash
-set -uo pipefail
+#!/usr/bin/env bash
+# Ubuntu 26.04 Desktop workstation setup. Run as your normal user, not sudo.
+set -Eeuo pipefail
 
-function step(){
-  echo "$(tput setaf 6)$1$(tput sgr0)"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
+# shellcheck source=lib/desktop.sh
+source "$SCRIPT_DIR/lib/desktop.sh"
+
+DRY_RUN=false
+REPLACE_DOTFILES=false
+DESKTOP=false
+GNOME_TWEAKS=false
+CHEWING=true
+ENABLE_SSH=false
+CHANGE_SHELL=false
+WORK_DIR=
+BACKUP_DIR=
+
+usage() {
+  cat <<'EOF'
+Usage: ./setup.sh [options]
+
+Set up a personal Ubuntu 26.04 Desktop workstation. Existing files and Git
+checkouts are preserved by default. Network access and sudo are required.
+
+  --dry-run           Print the plan without downloads, writes, or sudo.
+  --replace-dotfiles  Back up and replace changed managed dotfiles. Merge Git
+                      preferences via an include; never replace Git identity.
+  --desktop           Install Windows-inspired Fluent GTK and apply desktop
+                      preferences (GTK4/libadwaita apps may not use the theme).
+  --gnome-tweaks      Install GNOME Tweaks.
+  --chewing           Install and enable Chewing (the default).
+  --skip-chewing      Skip Chewing installation and input-source changes.
+                      Otherwise a graphical GNOME session is required.
+  --enable-ssh        Install OpenSSH server and enable ssh.socket. This opens
+                      a network listener, including during package installation.
+  --change-shell      Change your login shell to zsh.
+  -h, --help          Show this help.
+
+No LibreOffice, Peek, automatic package removal, or system-wide pip installs.
+See README.md for package lists, backups, and third-party shell components.
+EOF
 }
 
-step "[Get useful commands]"
-sudo apt update
-sudo apt install -y git build-essential zsh bat ncdu curl wget tmux peek \
-                    htop tree dos2unix openssh-server gnome-tweaks \
-                    clang fonts-roboto fonts-roboto-slab \
-                    ibus-chewing aria2 dconf-cli libreoffice \
-                    python3-dev python3-pip python3-setuptools pipenv \
-                    fd-find xclip
+parse_args() {
+  while (($#)); do
+    case "$1" in
+      --dry-run) DRY_RUN=true ;;
+      --replace-dotfiles) REPLACE_DOTFILES=true ;;
+      --desktop) DESKTOP=true ;;
+      --gnome-tweaks) GNOME_TWEAKS=true ;;
+      --chewing) CHEWING=true ;;
+      --skip-chewing) CHEWING=false ;;
+      --enable-ssh) ENABLE_SSH=true ;;
+      --change-shell) CHANGE_SHELL=true ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "Unknown option: $1 (see --help)" ;;
+    esac
+    shift
+  done
+}
 
-# Symbolic link bat and fd
-mkdir -p ~/.local/bin
-ln -s /usr/bin/batcat ~/.local/bin/bat
-ln -s $(which fdfind) ~/.local/bin/fd
+check_ubuntu() {
+  local release_file=${1:-/etc/os-release}
+  local ID='' VERSION_ID=''
+  [[ -r $release_file ]] || die 'Cannot identify this operating system.'
+  # shellcheck source=/dev/null
+  source "$release_file"
+  [[ $ID == ubuntu && $VERSION_ID == 26.04 ]] ||
+    die 'Only Ubuntu 26.04 is supported; no changes made.'
+}
 
-step "[Get jb font]"
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/install_manual.sh)"
+check_environment() {
+  check_ubuntu
+  [[ -n ${HOME:-} && $HOME == /* && -d $HOME ]] || die 'HOME must be an existing absolute directory.'
+  CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
+  DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
+  STATE_HOME=${XDG_STATE_HOME:-$HOME/.local/state}
+  ZSH_DIR=${ZSH:-$HOME/.oh-my-zsh}
+  CUSTOM_DIR=${ZSH_CUSTOM:-$ZSH_DIR/custom}
+  local path desktop=${XDG_CURRENT_DESKTOP:-}
+  for path in "$CONFIG_HOME" "$DATA_HOME" "$STATE_HOME" "$ZSH_DIR" "$CUSTOM_DIR"; do
+    [[ $path == /* ]] || die "Expected an absolute path: $path"
+  done
+  if ! $DRY_RUN; then
+    [[ $EUID -ne 0 ]] || die 'Run as your normal user, not root or sudo.'
+    command -v sudo >/dev/null || die 'sudo is required.'
+    if $DESKTOP || $CHEWING; then
+      [[ ${desktop,,} == *gnome* && -n ${DBUS_SESSION_BUS_ADDRESS:-} &&
+         -n ${WAYLAND_DISPLAY:-}${DISPLAY:-} ]] ||
+        die '--desktop and the default Chewing setup require a graphical GNOME session; use --skip-chewing to skip input setup.'
+      command -v gsettings >/dev/null || die 'GNOME gsettings is required.'
+    fi
+  fi
+}
 
-step "[Get delta]"
-aria2c https://github.com/dandavison/delta/releases/download/0.18.2/git-delta_0.18.2_amd64.deb -o delta.deb
-sudo dpkg -i delta.deb && rm delta.deb
+install_packages() {
+  step 'Installing Ubuntu packages'
+  local -a packages=(
+    # Build tools and Python (use virtual environments, not sudo pip).
+    build-essential clang python3-dev python3-pip python3-setuptools python3-venv pipenv
+    # CLI, shell, editors, and clipboard support for Wayland/XWayland.
+    git git-delta zsh bat fd-find ripgrep fzf micro nano tmux ncdu htop tree
+    curl wget aria2 dos2unix ca-certificates wl-clipboard xclip
+    fonts-jetbrains-mono
+  )
+  $DESKTOP && packages+=(fonts-roboto fonts-roboto-slab sassc gtk2-engines-murrine gnome-themes-extra)
+  $GNOME_TWEAKS && packages+=(gnome-tweaks)
+  $CHEWING && packages+=(ibus-chewing python3-gi)
+  $ENABLE_SSH && packages+=(openssh-server)
+  run sudo apt-get update
+  # Require a candidate for every requested package before attempting installation.
+  if ! $DRY_RUN; then
+    local package candidate
+    for package in "${packages[@]}"; do
+      candidate=$(LC_ALL=C apt-cache policy "$package")
+      [[ $candidate == *'Candidate:'* && $candidate != *'Candidate: (none)'* ]] ||
+        die "No candidate for $package. Check the Ubuntu repositories (including universe)."
+    done
+  fi
+  run sudo apt-get install -y --no-install-recommends "${packages[@]}"
+}
 
-step "[Get ripgrep]"
-aria2c https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep_14.1.1-1_amd64.deb -o ripgrep.deb
-sudo dpkg -i ripgrep.deb && rm ripgrep.deb
+install_command_links() {
+  step 'Preparing bat and fd command names'
+  local name target
+  for name in bat fd; do
+    case "$name" in bat) target=/usr/bin/batcat ;; fd) target=/usr/bin/fdfind ;; esac
+    if path_exists "$HOME/.local/bin/$name"; then
+      printf 'Keeping %s\n' "$HOME/.local/bin/$name"
+    else
+      run mkdir -p -- "$HOME/.local/bin"
+      run ln -s -- "$target" "$HOME/.local/bin/$name"
+    fi
+  done
+}
 
-step "[Get micro]"
-curl https://getmic.ro | bash
-mv micro ${HOME}/.local/bin/
+install_shell() {
+  step 'Installing shell components (existing checkouts are not updated)'
+  clone_repo https://github.com/ohmyzsh/ohmyzsh.git "$ZSH_DIR"
+  clone_repo https://github.com/zsh-users/zsh-autosuggestions.git "$CUSTOM_DIR/plugins/zsh-autosuggestions"
+  clone_repo https://github.com/zsh-users/zsh-syntax-highlighting.git "$CUSTOM_DIR/plugins/zsh-syntax-highlighting"
+  clone_repo https://github.com/MichaelAquilina/zsh-you-should-use.git "$CUSTOM_DIR/plugins/you-should-use"
+  clone_repo https://github.com/romkatv/powerlevel10k.git "$CUSTOM_DIR/themes/powerlevel10k"
+}
 
-step "[Prepare micro dracula theme]"
-git clone https://github.com/dracula/micro.git micro_dracula
-mkdir -p ~/.config/micro/colorschemes
-cd micro_dracula && mv dracula.micro ~/.config/micro/colorschemes
+install_git_preferences() {
+  local preferences="$CONFIG_HOME/git/ubuntu-setup.gitconfig" includes
+  install_file "$SCRIPT_DIR/.gitconfig" "$preferences"
+  # An include keeps all existing identities, signing settings, and conditional includes.
+  if ! $DRY_RUN; then
+    includes=$(git config --global --get-all include.path) || {
+      [[ $? == 1 ]] || die 'Cannot read your global Git configuration.'
+      includes=
+    }
+    if grep -Fxq -- "$preferences" <<< "$includes"; then
+      return
+    fi
+  fi
+  if ! $REPLACE_DOTFILES && { path_exists "${GIT_CONFIG_GLOBAL:-$HOME/.gitconfig}" ||
+      path_exists "$CONFIG_HOME/git/config"; }; then
+    printf 'Keeping existing Git configuration. To activate shared preferences:\n'
+    printf '  git config --global --add include.path %q\n' "$preferences"
+  else
+    run git config --global --add include.path "$preferences"
+  fi
+}
 
-step "[Get oh-my-zsh]"
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)" "" --unattended
-git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git ${HOME}/.oh-my-zsh/plugins/zsh-autosuggestions
-git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git ${HOME}/.oh-my-zsh/plugins/zsh-syntax-highlighting
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k
-git clone --depth=1 https://github.com/MichaelAquilina/zsh-you-should-use.git $HOME/.oh-my-zsh/custom/plugins/you-should-use
+install_dotfiles() {
+  step 'Installing configuration (preserve by default; replace only with backups)'
+  local name
+  for name in .zshrc .p10k.zsh .nanorc .tmux.conf; do
+    install_file "$SCRIPT_DIR/$name" "$HOME/$name"
+  done
+  install_git_preferences
+  install_file "$SCRIPT_DIR/config/micro/settings.json" "$CONFIG_HOME/micro/settings.json"
 
+  local theme="$CONFIG_HOME/micro/colorschemes/dracula.micro"
+  if path_exists "$theme"; then
+    printf 'Keeping %s\n' "$theme"
+  else
+    prepare_workspace
+    run curl --fail --location --retry 3 --connect-timeout 15 --max-time 120 \
+      https://raw.githubusercontent.com/dracula/micro/master/dracula.micro \
+      --output "$WORK_DIR/dracula.micro"
+    install_file "$WORK_DIR/dracula.micro" "$theme"
+  fi
+}
 
-step "[Get fzf]"
-git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-yes | ~/.fzf/install
+main() {
+  parse_args "$@"
+  check_environment
+  trap cleanup EXIT
+  trap 'printf "Error at line %s: %s\n" "$LINENO" "$BASH_COMMAND" >&2' ERR
+  $DRY_RUN && step 'Dry run: no commands that change the system will be executed'
+  install_packages
+  install_command_links
+  install_shell
+  install_dotfiles
+  if $DESKTOP; then
+    install_desktop_theme
+    configure_desktop
+  fi
+  if $CHEWING; then
+    configure_chewing
+  fi
+  if $ENABLE_SSH; then
+    step 'Enabling SSH socket activation (network listener)'
+    run sudo systemctl enable --now ssh.socket
+  fi
+  if $CHANGE_SHELL; then
+    step 'Changing your login shell to zsh'
+    if $DRY_RUN; then
+      run sudo chsh -s /usr/bin/zsh "$(id -un)"
+    else
+      local zsh_path
+      zsh_path=$(command -v zsh)
+      if [[ $(getent passwd "$(id -un)" | cut -d: -f7) != "$zsh_path" ]]; then
+        run sudo chsh -s "$zsh_path" "$(id -un)"
+      fi
+    fi
+  fi
+  step 'Done. Start zsh to try the shell; log out/in after changing your login shell.'
+  [[ -z $BACKUP_DIR ]] || printf 'Backups: %s\n' "$BACKUP_DIR"
+}
 
-step "[Get theme]"
-git clone https://github.com/dracula/gnome-terminal
-echo -e -n "1 \n YES \n 1 \n YES" | ./gnome-terminal/install.sh
-aria2c https://github.com/dracula/gtk/archive/master.zip -o dracula_theme.zip
-mkdir -p ${HOME}/.themes/ && unzip -d ${HOME}/.themes/ dracula_theme.zip && mv -f ${HOME}/.themes/gtk-master ${HOME}/.themes/Dracula
-aria2c https://github.com/dracula/gtk/files/5214870/Dracula.zip -o dracula_icon.zip
-mkdir -p ${HOME}/.icons/ && unzip -d ${HOME}/.icons/ dracula_icon.zip && rm dracula_icon.zip
-# Get dracula-gedit
-GEDIT_DIR=${HOME}/.local/share/gedit/styles
-mkdir -p ${GEDIT_DIR}
-aria2c https://raw.githubusercontent.com/dracula/gedit/master/dracula.xml -d ${GEDIT_DIR}
-
-step "[Tweak theme and terminal]"
-gsettings set org.gnome.desktop.interface gtk-theme "Dracula"
-gsettings set org.gnome.desktop.wm.preferences theme "Dracula"
-gsettings set org.gnome.desktop.interface icon-theme "Dracula"
-gsettings set org.gnome.desktop.interface font-name "Roboto Condensed, 14"
-gsettings set org.gnome.desktop.interface document-font-name "Roboto Slab 14"
-gsettings set org.gnome.desktop.interface monospace-font-name "JetBrains Mono 14"
-gsettings set org.gnome.desktop.wm.preferences titlebar-font "Roboto Condensed, Bold 14"
-gsettings set org.gnome.desktop.interface enable-animations false
-gsettings set org.gnome.shell enabled-extensions "['hidetopbar@mathieu.bidon.ca']"
-gsettings set org.gnome.shell.extensions.dash-to-dock dock-position BOTTOM
-gsettings set org.gnome.shell.extensions.dash-to-dock show-apps-at-top true
-gsettings set org.gnome.shell favorite-apps "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'jetbrains-toolbox.desktop']"
-PROFILE_ID=$( gsettings get org.gnome.Terminal.ProfilesList default | xargs echo )
-dconf write /org/gnome/terminal/legacy/profiles:/:${PROFILE_ID}/use-system-font false
-dconf write /org/gnome/terminal/legacy/profiles:/:${PROFILE_ID}/font "'JetBrains Mono 14'"
-dconf write /org/gnome/terminal/legacy/profiles:/:${PROFILE_ID}/scroll-on-output true
-dconf write /org/gnome/terminal/legacy/profiles:/:${PROFILE_ID}/scrollback-unlimited true
-dconf write /org/gnome/terminal/legacy/profiles:/:${PROFILE_ID}/use-transparent-background true
-dconf write /org/gnome/terminal/legacy/profiles:/:${PROFILE_ID}/background-transparency-percent 10
-dconf write /org/gnome/desktop/interface/gtk-im-module "'ibus'"
-dconf write /org/gnome/desktop/input-sources/sources "[('ibus', 'chewing'), ('xkb', 'us')]"
-dconf write /org/gnome/gedit/preferences/editor/scheme "'dracula'"
-dconf write /org/gnome/desktop/session/idle-delay "uint32 900"
-
-step "[clean up]"
-sudo apt update
-sudo apt autoremove -y
-sudo apt autoclean
-sudo chsh -s /bin/zsh ${USER}
-cp .gitconfig .p10k.zsh .zshrc ${HOME}/
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+  main "$@"
+fi

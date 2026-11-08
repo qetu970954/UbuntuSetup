@@ -1,142 +1,74 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
+# Interactive Zsh configuration for Ubuntu 26.04 Desktop.
+[[ -o interactive ]] || return
+
+# Keep instant prompt near the top; no interactive commands below this block.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# If you come from bash you might have to change your $PATH.
-export PATH=$HOME/.local/bin:/usr/local/bin:$PATH
+typeset -U path PATH
+path=("$HOME/.local/bin" $path)
+export ZSH="${ZSH:-$HOME/.oh-my-zsh}"
+export ZSH_CUSTOM="${ZSH_CUSTOM:-$ZSH/custom}"
+ZSH_THEME=''
+[[ ! -r "$ZSH_CUSTOM/themes/powerlevel10k/powerlevel10k.zsh-theme" ]] ||
+  ZSH_THEME='powerlevel10k/powerlevel10k'
+zstyle ':omz:update' mode reminder
 
-# Path to your oh-my-zsh installation.
-export ZSH="/home/$USER/.oh-my-zsh"
+plugins=(z git sudo tmux docker extract command-not-found colored-man-pages)
+for plugin in you-should-use zsh-autosuggestions zsh-syntax-highlighting; do
+  [[ ! -r "$ZSH_CUSTOM/plugins/$plugin/$plugin.plugin.zsh" ]] || plugins+=($plugin)
+done
+unset plugin
+[[ ! -r "$ZSH/oh-my-zsh.sh" ]] || source "$ZSH/oh-my-zsh.sh"
+[[ ! -r "$HOME/.p10k.zsh" ]] || source "$HOME/.p10k.zsh"
 
-# Set name of the theme to load --- if set to "random", it will
-# load a random theme each time oh-my-zsh is loaded, in which case,
-# to know which specific one was loaded, run: echo $RANDOM_THEME
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="powerlevel10k/powerlevel10k"
-
-# Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in $ZSH/themes/
-# If set to an empty array, this variable will have no effect.
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
-
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
-
-# Uncomment the following line to use hyphen-insensitive completion.
-# Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
-
-# Uncomment the following line to disable bi-weekly auto-update checks.
-# DISABLE_AUTO_UPDATE="true"
-
-# Uncomment the following line to automatically update without prompting.
-# DISABLE_UPDATE_PROMPT="true"
-
-# Uncomment the following line to change how often to auto-update (in days).
-# export UPDATE_ZSH_DAYS=13
-
-# Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS="true"
-
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
-
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
-
-# Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
-
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# You can set one of the optional three formats:
-# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# or set a custom format using the strftime function format specifications,
-# see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
-# Which plugins would you like to load?
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(
-  z
-  git
-  sudo
-  tmux
-  docker
-  extract
-  you-should-use
-  command-not-found
-  colored-man-pages
-  zsh-autosuggestions
-  zsh-syntax-highlighting
-)
-
-source $ZSH/oh-my-zsh.sh
-
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-# Other environment variables
-export BAT_THEME="Dracula"
-export TERM="xterm-256color"
-export MANPAGER="sh -c 'col -bx | bat -l man -p'"
-export FZF_DEFAULT_COMMAND="fd --type file --color=always"
-export FZF_DEFAULT_OPTS="--ansi -m --bind ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all"
+# Never force TERM: the terminal emulator and tmux advertise their capabilities.
+export BAT_THEME='Dracula'
 export MICRO_TRUECOLOR=1
+(( ! $+commands[micro] )) || export EDITOR=micro
+if (( $+commands[bat] && $+commands[col] )); then
+  export MANPAGER="sh -c 'col -bx | bat --language man --plain'"
+  export MANROFFOPT='-c'
+fi
+if (( $+commands[fd] )); then
+  export FZF_DEFAULT_COMMAND='fd --type file --color=always'
+  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+fi
+export FZF_DEFAULT_OPTS='--ansi -m --bind ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all'
+# fzf key bindings require a live line editor, not just an interactive shell.
+if [[ -o zle && -t 0 ]] && (( $+commands[fzf] )); then
+  source <(fzf --zsh)
+fi
 
-# Add alias
-alias ls='ls --color=tty'
+alias ls='ls --color=auto'
 alias rm='rm -iv'
 alias cp='cp -iv'
 alias mv='mv -iv'
-alias aria2c="aria2c -x 4 -s 4 --retry-wait=1"
-alias clip='xclip -selection clipboard'
-alias paste='xclip -selection clipboard -o'
+alias aria2c='aria2c -x 4 -s 4 --retry-wait=1'
 
+# Prefer native Wayland clipboard access; retain xclip for X11 sessions.
+clip() {
+  if [[ -n ${WAYLAND_DISPLAY:-} ]] && (( $+commands[wl-copy] )); then
+    wl-copy "$@"
+  elif [[ -n ${DISPLAY:-} ]] && (( $+commands[xclip] )); then
+    xclip -selection clipboard "$@"
+  else
+    print -u2 'No graphical clipboard available.'
+    return 1
+  fi
+}
+paste() {
+  if [[ -n ${WAYLAND_DISPLAY:-} ]] && (( $+commands[wl-paste] )); then
+    wl-paste "$@"
+  elif [[ -n ${DISPLAY:-} ]] && (( $+commands[xclip] )); then
+    xclip -selection clipboard -o "$@"
+  else
+    print -u2 'No graphical clipboard available.'
+    return 1
+  fi
+}
 
-# Do not overwrite files on redirection
-set -o noclobber
+setopt NO_CLOBBER
+# Machine-specific settings stay outside this repository.
+[[ ! -r "$HOME/.zshrc.local" ]] || source "$HOME/.zshrc.local"
